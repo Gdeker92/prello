@@ -1,6 +1,13 @@
 
 version: 2
 
+sources:
+  - name: projet_prello
+    tables:
+      - name: average_salary_by_municipality
+      - name: poverty_population_by_municipality
+
+
 models:
     - name: my_first_dbt_model
       description: "A starter dbt model"
