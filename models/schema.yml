@@ -17,6 +17,7 @@ sources:
       - name : louis_annee_vente
       - name : louis_departement      
       - name : louis_notary
+      - name : ensoleillement_depart
 
       
 models:
