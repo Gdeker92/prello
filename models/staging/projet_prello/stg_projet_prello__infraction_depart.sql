@@ -9,12 +9,12 @@ source as (
 renamed as (
 
     select
-        string_field_0,
-        2018,
-        2019,
-        2020,
-        2021,
-        2022
+        string_field_0 AS department,
+        int64_field_1 AS Annee_2018,
+        int64_field_2 AS Annee_2019,
+        int64_field_3 AS Annee_2020,
+        int64_field_4 AS Annee_2021,
+        int64_field_5 AS Annee_2022
 
     from source
 
