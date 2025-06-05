@@ -13,7 +13,11 @@ sources:
       - name: geographical_referential
       - name: POI_touristic_sites_by_municipality
       - name: POI_tourist_establishments
+      - name : louis_departement_vente
+      - name : louis_annee_vente
+      
 
+      
 models:
     - name: my_first_dbt_model
       description: "A starter dbt model"
