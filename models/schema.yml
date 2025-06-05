@@ -15,7 +15,8 @@ sources:
       - name: POI_tourist_establishments
       - name : louis_departement_vente
       - name : louis_annee_vente
-      
+      - name : louis_departement      
+      - name : louis_notary
 
       
 models:
@@ -36,5 +37,3 @@ models:
             tests:
                 - unique
                 - not_null
-=======
->>>>>>> adaa9a5af9c72a2163d14fe3a9268a28971bed3b
