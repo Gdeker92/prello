@@ -18,6 +18,7 @@ sources:
       - name : louis_departement      
       - name : louis_notary
       - name : ensoleillement_depart
+      - name : infraction_depart
 
       
 models:
