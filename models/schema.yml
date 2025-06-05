@@ -13,3 +13,27 @@ sources:
       - name: geographical_referential
       - name: POI_touristic_sites_by_municipality
       - name: POI_tourist_establishments
+      - name : louis_departement_vente
+      - name : louis_annee_vente
+      - name : louis_departement      
+      - name : louis_notary
+
+      
+models:
+    - name: my_first_dbt_model
+      description: "A starter dbt model"
+      columns:
+          - name: id
+            description: "The primary key for this table"
+            tests:
+                - unique
+                - not_null
+
+    - name: my_second_dbt_model
+      description: "A starter dbt model"
+      columns:
+          - name: id
+            description: "The primary key for this table"
+            tests:
+                - unique
+                - not_null
