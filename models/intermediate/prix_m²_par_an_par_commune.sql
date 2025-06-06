@@ -20,4 +20,5 @@ FROM subquery AS s
 JOIN {{ ref('int_geo_ref_clean') }} AS l 
   ON s.municipality_code = l.municipality_code
 WHERE department_code NOT LIKE '%97%'
+    AND department_code NOT IN ('FR-67','FR-68')
 ORDER BY s.municipality_code ASC, s.year ASC
