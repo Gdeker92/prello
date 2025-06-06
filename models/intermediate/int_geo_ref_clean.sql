@@ -5,7 +5,8 @@ SELECT
     WHEN CAST(country_code AS STRING) = '01' THEN 'France'
     ELSE CAST(country_code AS STRING)
   END AS country_name,
-department_name,
+  department_name,
+LOWER(REGEXP_REPLACE(TRIM(department_name), r"[^a-zA-Z0-9]", "")) AS department_for_sol,
 department_code,
 epci_code,
 city_name,
