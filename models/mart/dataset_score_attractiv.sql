@@ -21,7 +21,7 @@ GROUP BY department_code, department_name, department_for_sol
 SELECT 
 geo2.department_code,
 geo2.department_name,
-ROUND((geo2.avg_score_touristique + sol.soleil_score + inf.infrac_score) / 3, 2) AS score_attractivite_region,
+ROUND((geo2.avg_score_touristique + sol.soleil_score + (6 - inf.infrac_score)) / 3, 2) AS score_attractivite_region,
 geo2.avg_score_touristique,
 sol.j_ensoleillement,
 sol.soleil_score,
