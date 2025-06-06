@@ -1,23 +1,22 @@
+-- Étape 1 : Jointure des hébergements et sites touristiques par commune
 WITH joined_table AS (
   SELECT
     e.municipality_code,
     e.poi AS type_logement,
     e.importance AS importance_heber,
-    -- XXXX as score_heb
     e.name_reprocessed AS name,
-    CONCAT(e.latitude, ",", e.longitude) AS coordonnees_heberg,
+    CONCAT(e.latitude, ",", e.longitude) AS coordonnees_heberg, -- coordonnées hébergement
 
     s.poi AS tourism_area,
     s.importance AS importance_site,
-    -- XXX as score_tourism
-    s.name_reprocessed,
-    CONCAT(e.latitude, ",", e.longitude) AS coordonnees_activites
-
+    s.name_reprocessed AS name_site,
+    CONCAT(s.latitude, ",", s.longitude) AS coordonnees_activites -- coordonnées activité (corrigé)
   FROM {{ ref('stg_projet_prello__POI_tourist_establishments') }} AS e
   JOIN {{ ref('stg_projet_prello__POI_touristic_sites_by_municipality') }} AS s
     USING (municipality_code)
 ),
 
+-- Étape 2 : Classification des sites selon leur typologie
 type_site AS (
   SELECT
     *,
@@ -48,30 +47,27 @@ type_site AS (
   FROM joined_table
 ),
 
+-- Étape 3 : Calcul des scores moyens d’importance par commune (hébergement et site)
 moyenne_prepa_score AS (
   SELECT
     municipality_code,
     type_logement,
-    importance_heber,
-    -- score par municipalité heberg
-    AVG(importance_heber) OVER (PARTITION BY municipality_code) AS score_heberg,
+    AVG(importance_heber) OVER (PARTITION BY municipality_code) AS score_heberg, -- score par commune pour l’hébergement
     name,
     coordonnees_heberg,
 
     typologie_site_touristique,
     tourism_area,
-    importance_site,
-    -- score par municipalité site
-    AVG(importance_site) OVER (PARTITION BY municipality_code) AS score_site,
-    name_reprocessed AS name_site,
+    AVG(importance_site) OVER (PARTITION BY municipality_code) AS score_site, -- score par commune pour le site
+    name_site,
     coordonnees_activites
   FROM type_site
 ),
 
+-- Étape 4 : Calcul du min et max global pour normalisation
 score_final AS (
   SELECT
     *,
-    -- Étape 1: Calcul min et max sur toute la table (via fenêtre sans partition)
     MIN(score_site) OVER () AS min_score_site,
     MIN(score_heberg) OVER () AS min_score_heberg,
     MAX(score_site) OVER () AS max_score_site,
@@ -79,52 +75,58 @@ score_final AS (
   FROM moyenne_prepa_score
 ),
 
+-- Étape 5 : Normalisation min-max pour avoir des scores entre 0 et 1
 score_normalise AS (
   SELECT
     *,
-    -- Étape 2: Normalisation min-max (valeur comprise entre 0 et 1) score site
+    -- Normalisation du score site
     CASE
-      WHEN max_score_site = min_score_site THEN 0.5  -- éviter division par 0 si tous scores égaux
+      WHEN max_score_site = min_score_site THEN 0.5 -- cas limite
       ELSE (score_site - min_score_site) / (max_score_site - min_score_site)
     END AS score_site_normalise,
-        --Normalisation min-max (valeur comprise entre 0 et 1) score heberg
+
+    -- Normalisation du score hébergement
     CASE
-      WHEN max_score_heberg = min_score_heberg THEN 0.5  -- éviter division par 0 si tous scores égaux
+      WHEN max_score_heberg = min_score_heberg THEN 0.5 -- cas limite
       ELSE (score_heberg - min_score_heberg) / (max_score_heberg - min_score_heberg)
     END AS score_heberg_normalise
   FROM score_final
 ),
 
+-- Étape 6 : Projection des scores normalisés sur une échelle de 1 à 5
 score_pondere AS (
   SELECT
     *,
-    -- Étape 3: Projection sur une échelle de 1 à 5
-    ROUND((score_site_normalise * 4) + 1, 2) AS score_site_pondere,
-    ROUND(score_heberg_normalise * 4 + 1, 2) AS score_heberg_pondere
+    ROUND((score_site_normalise * 4) + 1, 2) AS score_site_pondere, -- score site sur 5
+    ROUND((score_heberg_normalise * 4) + 1, 2) AS score_heberg_pondere -- score hébergement sur 5
   FROM score_normalise
 ),
+
+-- Étape 7 : Calcul du score touristique final pondéré (ex : 60% site, 40% hébergement)
 score_touristique_final AS (
   SELECT
     *,
-    -- Calcul du score touristique pondéré combiné (exemple : 60% site, 40% hébergement)
-    ROUND((score_site_pondere * 0.6)+ (score_heberg_pondere * 0.4), 2) AS score_touristique
+    ROUND((score_site_pondere * 0.6) + (score_heberg_pondere * 0.4), 2) AS score_touristique
   FROM score_pondere
 )
 
-  SELECT
-        municipality_code, -- ma granularité
+-- Étape finale : Sélection des champs pour analyse ou visualisation
+SELECT
+  municipality_code, -- ma granularité (commune)
 
-        type_logement, -- mes infos hébergement
-        name,
-        coordonnees_heberg,
-        score_heberg_pondere, -- mon score touristique d'hébergement
+  -- Infos hébergement
+  type_logement,
+  name,
+  coordonnees_heberg,
+  score_heberg_pondere, -- score touristique hébergement (sur 5)
 
-        typologie_site_touristique, -- mes infos sites tourist
-        tourism_area,
-        name_site,
-        coordonnees_activites,
-        score_site_pondere, -- mon score touristique de sites
+  -- Infos site touristique
+  typologie_site_touristique,
+  tourism_area,
+  name_site,
+  coordonnees_activites,
+  score_site_pondere, -- score touristique site (sur 5)
 
-        score_touristique -- mon score global touristique
-
-  FROM score_touristique_final
+  -- Score global touristique (pondéré)
+  score_touristique
+FROM score_touristique_final
