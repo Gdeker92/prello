@@ -24,14 +24,18 @@ geo2.country_name,
 geo2.department_code,
 SUBSTRING(geo2.department_code, 4) AS department_num,
 geo2.department_name,
-ROUND((geo2.avg_score_touristique + sol.soleil_score + (6 - inf.infrac_score)) / 3, 2) AS score_attractivite_region,
+ROUND((geo2.avg_score_touristique + sol.soleil_score + (6 - cambr.score_cambriolage)) / 3, 2) AS score_attractivite_region,
 geo2.avg_score_touristique,
 sol.j_ensoleillement,
 sol.soleil_score,
 inf.avg_infractions,
-inf.infrac_score
+inf.infrac_score,
+cambr.avg_cambiriolage_maison_secondaire AS avg_cambr_2nd_house,
+cambr.score_cambriolage
 FROM poi_depart as geo2
 LEFT JOIN {{ ref('int_j_ensoleillement') }} AS sol
     ON geo2.department_for_sol = sol.department
 LEFT JOIN {{ ref('int_infrac_depart') }} AS inf
     ON geo2.department_code = inf.department
+LEFT JOIN {{ ref('int_cambriolage_2nd_house') }} AS cambr
+    ON geo2.department_code = cambr.departement_code
