@@ -25,7 +25,14 @@ SELECT
     ((cal.avg_infractions - mm.min_infractions) / 
      (mm.max_infractions - mm.min_infractions)) * 5,
     2
-  ) AS infrac_score
+  ) AS infrac_score,
+  ROUND(
+    5 - (
+      ((cal.avg_infractions - mm.min_infractions) / 
+       NULLIF((mm.max_infractions - mm.min_infractions), 0)) * 5
+    ),
+    2
+  ) AS security_score
 FROM cal_avg as cal
 CROSS JOIN min_max as mm
 ORDER BY infrac_score DESC
